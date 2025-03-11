@@ -9,7 +9,7 @@ namespace Opgave4
 {
     class TCPServer
     {
-    public static void HandleClient(TcpClient client)
+        public static void HandleClient(TcpClient client)
         {
             using (client)
             {
@@ -20,39 +20,64 @@ namespace Opgave4
 
                 while (true)
                 {
-                    // 1) Læs kommando
-                    string command = reader.ReadLine();
-                    if (string.IsNullOrWhiteSpace(command)) break;
-
-                    // 2) Svar med "Input numbers"
-                    writer.WriteLine("Input numbers");
-
-                    // 3) Læs 2 tal adskilt af mellemrum
-                    string numbersLine = reader.ReadLine();
-                    if (string.IsNullOrWhiteSpace(numbersLine)) break;
-                    string[] numbers = numbersLine.Split();
-
-                    int n1 = int.Parse(numbers[0]);
-                    int n2 = int.Parse(numbers[1]);
-
-                    // 4) Udfør handling baseret på kommandoen, og skriv resultat
-                    switch (command)
+                    try
                     {
-                        case "Random":
-                            writer.WriteLine(rnd.Next(n1, n2 + 1));
+                        // 1) Læs kommando
+                        string command = reader.ReadLine();
+                        if (string.IsNullOrWhiteSpace(command))
+                        {
+                            Console.WriteLine("Forbindelsen lukkes: Ingen kommando modtaget.");
                             break;
-                        case "Add":
-                            writer.WriteLine(n1 + n2);
+                        }
+
+                        Console.WriteLine($"Modtaget kommando: {command}");
+                        writer.WriteLine("Input numbers");
+
+                        // 3) Læs 2 tal
+                        string numbersLine = reader.ReadLine();
+                        if (string.IsNullOrWhiteSpace(numbersLine))
+                        {
+                            Console.WriteLine("Forbindelsen lukkes: Ingen tal modtaget.");
                             break;
-                        case "Subtract":
-                            writer.WriteLine(n1 - n2);
-                            break;
-                        default:
-                            // Ukendt kommando, luk forbindelsen
-                            return;
+                        }
+
+                        Console.WriteLine($"Modtaget tal: {numbersLine}");
+                        string[] numbers = numbersLine.Split();
+
+                        if (numbers.Length < 2 || !int.TryParse(numbers[0], out int n1) || !int.TryParse(numbers[1], out int n2))
+                        {
+                            writer.WriteLine("Error: Invalid numbers");
+                            Console.WriteLine("Fejl: Modtaget ugyldige tal");
+                            continue;
+                        }
+
+                        // 4) Udfør handling baseret på kommandoen, og skriv resultat
+                        switch (command)
+                        {
+                            case "Random":
+                                writer.WriteLine(rnd.Next(n1, n2 + 1));
+                                break;
+                            case "Add":
+                                writer.WriteLine(n1 + n2);
+                                break;
+                            case "Subtract":
+                                writer.WriteLine(n1 - n2);
+                                break;
+                            default:
+                                writer.WriteLine("Error: Unknown command");
+                                Console.WriteLine("Fejl: Ukendt kommando");
+                                continue;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Fejl opstod: {ex.Message}");
+                        writer.WriteLine("Error: Server encountered an issue.");
+                        break; // Luk forbindelsen ved en uventet fejl
                     }
                 }
             }
         }
+
     }
 }
